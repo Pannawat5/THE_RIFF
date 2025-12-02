@@ -1,14 +1,44 @@
-Binaries
-DerivedDataCache
-Intermediate
-Saved
-.vscode
-.vs
+# Git Ignore Configuration for Unreal Engine 5 Projects
+# ----------------------------------------------------
+
+# Folders to completely ignore
+# These folders contain temporary, generated, or cache files
+Binaries/
+Build/
+DerivedDataCache/
+Intermediate/
+Saved/
+
+# Ignore Engine folders inside the project (e.g. plugins downloaded)
+Engine/
+
+# Standard OS generated files
+.DS_Store
+.vscode/
+
+# Ignore files in the root directory
 *.VC.db
+*.VC.VC.opendb
 *.opensdf
-*.opendb
 *.sdf
-*.sln
 *.suo
-*.xcodeproj
+
+# Ignore Visual Studio related files
+.vs/
+*.sln
+*.vcxproj
+*.vcxproj.user
+
+# Mac ignores
+# Mac ignores are generally located in the .DS_Store section but sometimes needed here too
 *.xcworkspace
+*.xcodeproj
+
+# Additional files that should not be tracked by Git
+# If you are using C++ you will not want to track these:
+# Source/ThirdParty/
+# Plugins/PluginName/Source/ThirdParty/
+
+# NOTE on Content/ Folder:
+# Content/ folder is generally tracked, but its files (.uasset, .umap) are handled by Git LFS 
+# via the .gitattributes file. Do NOT ignore the Content/ folder entirely here.

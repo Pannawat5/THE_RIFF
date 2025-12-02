@@ -1,1 +1,40 @@
-Content/** filter=lfs diff=lfs merge=lfs -text
+# Git LFS Configuration for Unreal Engine 5 Projects
+# ----------------------------------------------------
+
+# 1. Core Unreal Engine Assets (Mandatory for LFS)
+# File assets and maps are large binary files that MUST be tracked by LFS.
+*.uasset filter=lfs diff=lfs merge=lfs -text
+*.umap filter=lfs diff=lfs merge=lfs -text
+*.uproject filter=lfs diff=lfs merge=lfs -text
+
+# 2. Source Code/Configuration Files (Keep in standard Git)
+# These are small text files that should be tracked by standard Git for proper diffs and merges.
+*.cpp text eol=crlf
+*.c text eol=crlf
+*.h text eol=crlf
+*.ini text eol=crlf
+*.config text eol=crlf
+*.json text eol=crlf
+*.xml text eol=crlf
+*.target text eol=crlf
+*.build text eol=crlf
+*.cs text eol=crlf
+
+# 3. Large Imported Assets (Highly Recommended for LFS)
+# These files are often massive and need LFS.
+*.fbx filter=lfs diff=lfs merge=lfs -text
+*.psd filter=lfs diff=lfs merge=lfs -text
+*.tga filter=lfs diff=lfs merge=lfs -text
+*.png filter=lfs diff=lfs merge=lfs -text
+*.jpg filter=lfs diff=lfs merge=lfs -text
+*.wav filter=lfs diff=lfs merge=lfs -text
+*.mp4 filter=lfs diff=lfs merge=lfs -text
+*.mov filter=lfs diff=lfs merge=lfs -text
+
+# 4. Binary Files that should be IGNORED for merging (Do not change)
+# These files are engine-specific binaries that should NOT be merged automatically.
+*.bin binary
+*.dat binary
+
+# Optional: If you use Perforce or other version control, you might need this
+# Content/Developers/** text eol=crlf
