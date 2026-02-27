@@ -73,32 +73,17 @@ void UAIHttpHelper::SendChatToOllama(
     TSharedRef<IHttpRequest, ESPMode::ThreadSafe> Request =
         FHttpModule::Get().CreateRequest();
 
-    Request->SetURL(TEXT("https://api.openai.com/v1/chat/completions"));
+    // 🔥 เปลี่ยนเป็น VM Server ของคุณ
+    Request->SetURL(TEXT("http://203.158.101.97:3000/chat"));
     Request->SetVerb(TEXT("POST"));
     Request->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
 
-    Request->SetHeader(
-        TEXT("Authorization"),
-        TEXT("Bearer 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")
-    );
-
     FString EscapedPrompt = PlayerText.ReplaceCharWithEscapedChar();
 
+    // 🔥 ส่งแค่ message ไป backend
     FString Body = FString::Printf(TEXT(R"(
 {
-    "model": "gpt-4o-mini",
-    "messages": [
-        {
-            "role": "system",
-            "content": "You are the Expert NPC trapped in a reversed dimension called The Riff. The player must defeat four directional bosses before facing Jigen, the Dimensional Overseer. East: Homura (Dormitory Specter) drops Dimensional Control Cube. West: Dokuma (Venomous Caterer) drops Sealed Magic Plate. North: Kurona (Whispering Librarian) drops Soul Reflection Fragment. South: Kagura (Phantom Sprinter) drops Dimensional Speed Core. Speak briefly in 1-2 short sentences. Stay serious and grounded. Avoid poetic language. Do not provide detailed explanations or programming help. Answer according to this world's lore."
-        },
-        {
-            "role": "user",
-            "content": "%s"
-        }
-    ],
-    "temperature": 0.3,
-    "max_tokens": 50
+    "message": "%s"
 }
 )"), *EscapedPrompt);
 
@@ -109,7 +94,7 @@ void UAIHttpHelper::SendChatToOllama(
         {
             if (!bSuccess || !Res.IsValid())
             {
-                Action->OutResponse = TEXT("[HTTP Request Failed]");
+                Action->OutResponse = TEXT("[Server Request Failed]");
                 Action->bFinished = true;
                 return;
             }
@@ -139,36 +124,16 @@ void UAIHttpHelper::SendChatToOllama(
                 return;
             }
 
-            const TArray<TSharedPtr<FJsonValue>>* Choices;
+            FString Reply;
 
-            if (Json->TryGetArrayField(TEXT("choices"), Choices) &&
-                Choices->Num() > 0)
+            // 🔥 ตอนนี้ backend ส่ง { "reply": "text" }
+            if (Json->TryGetStringField(TEXT("reply"), Reply))
             {
-                TSharedPtr<FJsonObject> MessageObject =
-                    (*Choices)[0]->AsObject()->GetObjectField(TEXT("message"));
-
-                FString Text = MessageObject->GetStringField(TEXT("content"));
-
-                int32 SentenceCount = 0;
-                FString Result;
-
-                for (int32 i = 0; i < Text.Len(); i++)
-                {
-                    Result.AppendChar(Text[i]);
-
-                    if (Text[i] == '.' || Text[i] == '!' || Text[i] == '?')
-                    {
-                        SentenceCount++;
-                        if (SentenceCount >= 2)
-                            break;
-                    }
-                }
-
-                Action->OutResponse = Result.TrimStartAndEnd();
+                Action->OutResponse = Reply;
             }
             else
             {
-                Action->OutResponse = TEXT("[No Choices]");
+                Action->OutResponse = TEXT("[No Reply Field]");
             }
 
             Action->bFinished = true;
