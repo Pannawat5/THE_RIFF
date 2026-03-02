@@ -74,7 +74,7 @@ void UAIHttpHelper::SendChatToOllama(
         FHttpModule::Get().CreateRequest();
 
     // 🔥 เปลี่ยนเป็น VM Server ของคุณ
-    Request->SetURL(TEXT("http://207.148.123.48:3000/chat"));
+    Request->SetURL(TEXT("https://api.theriffgame.org/chat"));
     Request->SetVerb(TEXT("POST"));
     Request->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
 
