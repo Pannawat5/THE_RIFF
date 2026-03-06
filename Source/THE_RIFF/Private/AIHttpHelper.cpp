@@ -74,20 +74,24 @@ void UAIHttpHelper::SendChatToOllama(
         FHttpModule::Get().CreateRequest();
 
     // 🔥 เปลี่ยนเป็น VM Server ของคุณ
-    Request->SetURL(TEXT("https://api.theriffgame.org/chat"));
-    Request->SetVerb(TEXT("POST"));
-    Request->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
+Request->SetURL(TEXT("https://api.theriffgame.org/chat"));
+Request->SetVerb(TEXT("POST"));
+Request->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
 
-    FString EscapedPrompt = PlayerText.ReplaceCharWithEscapedChar();
+FString EscapedPrompt = PlayerText.ReplaceCharWithEscapedChar();
 
-    // 🔥 ส่งแค่ message ไป backend
-    FString Body = FString::Printf(TEXT(R"(
+// Player ID ชั่วคราว
+FString PlayerID = TEXT("player_test");
+
+// 🔥 ส่ง player_id + message
+FString Body = FString::Printf(TEXT(R"(
 {
+    "player_id": "%s",
     "message": "%s"
 }
-)"), *EscapedPrompt);
+)"), *PlayerID, *EscapedPrompt);
 
-    Request->SetContentAsString(Body);
+Request->SetContentAsString(Body);
 
     Request->OnProcessRequestComplete().BindLambda(
         [Action](FHttpRequestPtr Req, FHttpResponsePtr Res, bool bSuccess)
