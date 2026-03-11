@@ -11,6 +11,38 @@
 #include "Json.h"
 #include "JsonUtilities.h"
 
+#include "Misc/Guid.h"
+#include "Misc/FileHelper.h"
+#include "Misc/Paths.h"
+#include "HAL/PlatformFilemanager.h"
+
+// =====================================================
+// PLAYER ID (สร้างครั้งเดียว ต่อเครื่อง)
+// =====================================================
+
+FString GetOrCreatePlayerID()
+{
+    FString SavePath = FPaths::ProjectSavedDir() + TEXT("player_id.txt");
+
+    FString PlayerID;
+
+    if (FPlatformFileManager::Get().GetPlatformFile().FileExists(*SavePath))
+    {
+        FFileHelper::LoadFileToString(PlayerID, *SavePath);
+        return PlayerID;
+    }
+
+    PlayerID = FGuid::NewGuid().ToString();
+
+    FFileHelper::SaveStringToFile(PlayerID, *SavePath);
+
+    return PlayerID;
+}
+
+// =====================================================
+// LATENT ACTION
+// =====================================================
+
 class FOpenAILatentAction : public FPendingLatentAction
 {
 public:
@@ -41,6 +73,10 @@ public:
         );
     }
 };
+
+// =====================================================
+// SEND CHAT
+// =====================================================
 
 void UAIHttpHelper::SendChatToOllama(
     UObject* WorldContextObject,
@@ -73,25 +109,34 @@ void UAIHttpHelper::SendChatToOllama(
     TSharedRef<IHttpRequest, ESPMode::ThreadSafe> Request =
         FHttpModule::Get().CreateRequest();
 
-    // 🔥 เปลี่ยนเป็น VM Server ของคุณ
-Request->SetURL(TEXT("https://api.theriffgame.org/chat"));
-Request->SetVerb(TEXT("POST"));
-Request->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
+    // =========================
+    // SERVER
+    // =========================
 
-FString EscapedPrompt = PlayerText.ReplaceCharWithEscapedChar();
+    Request->SetURL(TEXT("https://api.theriffgame.org/chat"));
+    Request->SetVerb(TEXT("POST"));
+    Request->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
 
-// Player ID ชั่วคราว
-FString PlayerID = TEXT("player_test");
+    FString EscapedPrompt = PlayerText.ReplaceCharWithEscapedChar();
 
-// 🔥 ส่ง player_id + message
-FString Body = FString::Printf(TEXT(R"(
+    // =========================
+    // PLAYER ID ต่อเครื่อง
+    // =========================
+
+    FString PlayerID = GetOrCreatePlayerID();
+
+    FString Body = FString::Printf(TEXT(R"(
 {
     "player_id": "%s",
     "message": "%s"
 }
 )"), *PlayerID, *EscapedPrompt);
 
-Request->SetContentAsString(Body);
+    Request->SetContentAsString(Body);
+
+    // =========================
+    // RESPONSE
+    // =========================
 
     Request->OnProcessRequestComplete().BindLambda(
         [Action](FHttpRequestPtr Req, FHttpResponsePtr Res, bool bSuccess)
@@ -130,7 +175,6 @@ Request->SetContentAsString(Body);
 
             FString Reply;
 
-            // 🔥 ตอนนี้ backend ส่ง { "reply": "text" }
             if (Json->TryGetStringField(TEXT("reply"), Reply))
             {
                 Action->OutResponse = Reply;
