@@ -7,6 +7,7 @@
 void UPuzzleAPI::GetPuzzle(
     UObject* WorldContextObject,
     FLatentActionInfo LatentInfo,
+    FString Category,
     FString& OutQuestion,
     FString& OutAnswer
 )
@@ -66,6 +67,13 @@ void UPuzzleAPI::GetPuzzle(
     Request->SetVerb(TEXT("POST"));
     Request->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
 
+    FString Body = FString::Printf(
+        TEXT("{\"category\":\"%s\"}"),
+        *Category
+    );
+
+    Request->SetContentAsString(Body);
+
     Request->OnProcessRequestComplete().BindLambda(
         [NewAction](FHttpRequestPtr Req, FHttpResponsePtr Res, bool bSuccess)
         {
@@ -82,10 +90,15 @@ void UPuzzleAPI::GetPuzzle(
             TSharedPtr<FJsonObject> JsonObject;
             TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(JsonStr);
 
-            if (FJsonSerializer::Deserialize(Reader, JsonObject))
+            if (FJsonSerializer::Deserialize(Reader, JsonObject) && JsonObject.IsValid())
             {
                 NewAction->Question = JsonObject->GetStringField("question");
                 NewAction->Answer = JsonObject->GetStringField("answer");
+            }
+            else
+            {
+                NewAction->Question = TEXT("Parse Error");
+                NewAction->Answer = TEXT("");
             }
 
             NewAction->bDone = true;

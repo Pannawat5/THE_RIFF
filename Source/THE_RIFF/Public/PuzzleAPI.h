@@ -18,11 +18,12 @@ public:
             WorldContext = "WorldContextObject",
             Latent,
             LatentInfo = "LatentInfo"
-            )
+        )
     )
     static void GetPuzzle(
         UObject* WorldContextObject,
         FLatentActionInfo LatentInfo,
+        FString Category,
         FString& OutQuestion,
         FString& OutAnswer
     );
